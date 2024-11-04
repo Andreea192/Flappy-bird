@@ -1,187 +1,56 @@
 #include <iostream>
 #include <string>
+#include <chrono>
+#include <thread>
+#include <conio.h> // pentru _kbhit() și _getch()
 
 using namespace std;
+using namespace std::chrono;
+
+using Clock = steady_clock;
+using TimePoint = Clock::time_point;
+using Seconds = duration<int>;
 
 class Pasare {
     int viata;
 public:
     Pasare() {
-        viata = 100; // viata initiala a caracterului
+        viata = 100; // viața inițială a păsării
     }
-    Pasare(int viata_noua) {
-        viata = viata_noua;
-    }
-    Pasare(const Pasare &p) {
-        viata = p.viata; // Constructor de copiere
-    }
-    Pasare& operator=(const Pasare &p) {
-        viata = p.viata;
-        return *this;
-    }
-    ~Pasare() {
-        cout << "Pasarea destructor" << endl;
-    }
+
     void scade_viata(int valoare) {
         viata -= valoare;
         if (viata < 0) {
-            viata = 0; // Viața nu poate scădea sub 0
+            viata = 0; // viața nu poate scădea sub 0
         }
     }
+
     bool este_in_viata() const {
-        return viata > 0;
+        return viata > 0; // verifică dacă pasărea este în viață
     }
-    int get_viata() const {
-        return viata;
-    }
-    friend ostream& operator<<(ostream &os, const Pasare &p) {
-        os << "viata: " << p.viata;
-        return os;
-    }
-};
 
-class Obstacole {
-    string obstacol;
-    int dauna;
-public:
-    Obstacole() {
-        obstacol = "Tub";
-        dauna = 100;
+    void reset() {
+        viata = 100; // resetează viața păsării
     }
-    Obstacole(const string &tip_pericol, int dauna_noua) {
-        obstacol = tip_pericol;
-        dauna = dauna_noua;
-    }
-    Obstacole(const Obstacole &pericol) {
-        obstacol = pericol.obstacol;
-        dauna = pericol.dauna;
-    }
-    Obstacole& operator=(const Obstacole &pericol) {
-        if (this != &pericol) {
-            obstacol = pericol.obstacol;
-            dauna = pericol.dauna;
-        }
-        return *this;
-    }
-    ~Obstacole() {
-        // Destructor
-    }
-    string getObstacol() const {
-        return obstacol; // Tipul obstacolului
-    }
-    int get_dauna() const {
-        return dauna; // Dauna cauzată de obstacol
-    }
-    void interactiune(Pasare &pasare, const string& impact) {
-        if (obstacol == "Tub") {
-            pasare.scade_viata(dauna);
-            cout << "Pasarea s-a lovit de un " << obstacol << ". Dauna: " << dauna << endl;
-        } else if (obstacol == "Grindina") {
-            if (impact == "piatra_mare") {
-                pasare.scade_viata(90);
-                cout << "Pasarea a fost lovita de o piatra mare" << endl;
-            } else if (impact == "piatra_mica") {
-                pasare.scade_viata(40);
-                cout << "Pasarea a fost lovita de o piatra mica" << endl;
-            }
-        }
-    }
-    friend ostream& operator<<(ostream &os, const Obstacole &pericol) {
-        os << "Obstacol: " << pericol.obstacol << ", dauna: " << pericol.dauna << endl;
-        return os;
-    }
-};
 
-class Nivel {
-    int dificultate;
-    Obstacole *obstacol;
-    int nr_obstacole;
-public:
-    Nivel() {
-        dificultate = 1;
-        nr_obstacole = 0;
-        obstacol = new Obstacole[10];
-    }
-    Nivel(int dificultate_noua) {
-        dificultate = dificultate_noua;
-        nr_obstacole = 0;
-        obstacol = new Obstacole[20]; // Alocare mai mare pentru obstacole
-        genereaza_obstacol(); // Generează obstacole la crearea nivelului
-    }
-    ~Nivel() {
-        delete[] obstacol; // Destructor
-    }
-    void genereaza_obstacol() {
-        if (dificultate == 1) {
-            nr_obstacole = 4;
-            for (int i = 0; i < nr_obstacole; i++) {
-                obstacol[i] = Obstacole("Tub", 100);
-            }
-        } else if (dificultate == 2) {
-            nr_obstacole = 10;
-            for (int i = 0; i < nr_obstacole; i++) {
-                obstacol[i] = Obstacole("Tub", 100);
-            }
-        } else if (dificultate == 3) {
-            nr_obstacole = 5;
-            for (int i = 0; i < nr_obstacole; i++) {
-                obstacol[i] = Obstacole("Tub", 100);
-            }
-            obstacol[nr_obstacole++] = Obstacole("Grindina", 90); // Piatra mare
-            obstacol[nr_obstacole++] = Obstacole("Grindina", 90); // Piatra mare
-            obstacol[nr_obstacole++] = Obstacole("Grindina", 40); // Piatra mica
-            obstacol[nr_obstacole++] = Obstacole("Grindina", 40); // Piatra mica
-            obstacol[nr_obstacole++] = Obstacole("Grindina", 40); // Piatra mica
-            for (int i = 0; i < 4; i++) {
-                obstacol[nr_obstacole++] = Obstacole("Tub", 100);
-            }
-        } else if (dificultate == 4) {
-            nr_obstacole = 2 * 10; // Dublăm obstacolele de la nivelul 3
-            for (int i = 0; i < nr_obstacole; i++) {
-                obstacol[i] = Obstacole("Tub", 100);
-            }
-        } else if (dificultate == 5) {
-            nr_obstacole = 2 * 10; // Dublăm obstacolele de la nivelul 2
-            for (int i = 0; i < nr_obstacole; i++) {
-                obstacol[i] = Obstacole("Tub", 100);
-            }
-        }
-    }
-    int get_dificultate() const {
-        return dificultate;
-    }
-    int get_nr_obstacole() const {
-        return nr_obstacole;
-    }
-    void afiseaza_obstacol() {
-        for (int i = 0; i < nr_obstacole; i++) {
-            cout << obstacol[i].getObstacol() << " cu dauna " << obstacol[i].get_dauna() << endl;
-        }
-    }
-    void interactiune(Pasare &pasare) {
-        for (int i = 0; i < nr_obstacole; i++) {
-            obstacol[i].interactiune(pasare, "piatra_mare"); // Exemplu de impact
-            if (!pasare.este_in_viata()) {
-                cout << "Pasărea nu mai este în viață!" << endl;
-                break; // Ieșim din buclă dacă pasărea a murit
-            }
-        }
+    friend ostream& operator<<(ostream& os, const Pasare& p) {
+        os << "Pasare [viata: " << p.viata << "]";
+        return os;
     }
 };
 
 class Meniu {
     string culori[4];
     int nivel_curent;
-    int viteza;
 public:
     Meniu() {
         culori[0] = "Rosu";
         culori[1] = "Verde";
         culori[2] = "Albastru";
         culori[3] = "Galben";
-        nivel_curent = 1;
-        viteza = 5;
+        nivel_curent = 1; // setarea nivelului curent
     }
+
     void afiseaza_meniu() {
         cout << "Selecteaza o culoare pentru pasare: " << endl;
         for (int i = 0; i < 4; i++) {
@@ -191,38 +60,146 @@ public:
         int nivel_selectat;
         cin >> nivel_selectat;
         if (nivel_selectat > 0 && nivel_selectat <= nivel_curent) {
-            nivel_curent = nivel_selectat;
+            nivel_curent = nivel_selectat; // actualizează nivelul curent
         } else {
             cout << "Nivel invalid! Se va folosi nivelul curent: " << nivel_curent << endl;
         }
-
-        cout << "Setează viteza păsării (1-10): ";
-        cin >> viteza;
-        if (viteza < 1 || viteza > 10) {
-            cout << "Viteza invalidă! Se va folosi viteza implicită: 1" << endl;
-            viteza = 1;
-        }
     }
 
-    int get_dificultate() const { // Adăugat metoda
-        return nivel_curent;
+    int get_nivel() const {
+        return nivel_curent; // returnează nivelul curent
+    }
+
+    // Operator friend pentru a putea utiliza cout
+    friend ostream& operator<<(ostream& os, const Meniu& m) {
+        os << "Meniu [nivel curent: " << m.nivel_curent << "]";
+        return os;
     }
 };
 
+void asteapta_tasta_pentru_continuare() {
+    cout << "Apasa 'p' pentru a continua..." << endl;
+    while (true) {
+        if (_kbhit()) {
+            char c = _getch();
+            if (c == 'p') {
+                break; // continuă jocul
+            }
+        }
+        this_thread::sleep_for(seconds(2)); // așteaptă 2 s
+    }
+}
+
+int numar_apasari_necesare(int nivel, int index_tub) {
+    if (nivel == 1) {
+        return 3; // necesare 3 apăsări pentru nivelul 1
+    } else if (nivel == 2) {
+        return 2; // necesare 2 apăsări pentru nivelul 2
+    } else if (nivel == 3) {
+        return 4; // necesare 4 apăsări pentru nivelul 3
+    } else {
+        // Alternare pentru niveluri >= 4
+        if (index_tub % 4 == 0) {
+            return 3; // tub de 3 apăsări
+        } else if (index_tub % 4 == 1 || index_tub % 4 == 2) {
+            return 2; // tub de 2 apăsări
+        } else {
+            return 4; // tub de 4 apăsări
+        }
+    }
+}
+
 int main() {
-    Meniu meniu;
-    meniu.afiseaza_meniu();
+    Pasare pasare1; // Crearea unui obiect Pasare
+    Meniu meniu; // Crearea meniului
+    meniu.afiseaza_meniu(); // Afișează opțiunile de meniu
 
-    Pasare pasare;
-    int dificultate_selectata = meniu.get_dificultate(); // Acum va funcționa corect
-    Nivel nivel(dificultate_selectata);
+    int nivel_curent = meniu.get_nivel();
+    int pierderi = 0; // Contor pentru pierderi
 
-    cout << "Obstacolele generate pentru nivelul " << nivel.get_dificultate() << ":" << endl;
-    nivel.afiseaza_obstacol();
+    while (pierderi < 2) { // Jucătorul poate pierde de maximum 2 ori
+        cout << "Nivelul " << nivel_curent << " incepe!" << endl;
+        asteapta_tasta_pentru_continuare(); // Așteaptă tasta 'p' pentru a începe
 
-    nivel.interactiune(pasare);
+        bool nivel_completat = false; // Variabilă pentru a verifica completarea nivelului
 
-    cout << "Viața rămasă a păsării: " << pasare << endl;
+        while (!nivel_completat && pasare1.este_in_viata()) {
+            int nr_tuburi = 2 + (nivel_curent / 2); // Numărul de tuburi per nivel
+
+            for (int i = 0; i < nr_tuburi; ++i) {
+                int enter_necessar = numar_apasari_necesare(nivel_curent, i);
+                cout << "Trecere prin tubul " << i + 1 << ". Apasa Enter de " << enter_necessar << " ori pentru a trece!" << endl;
+
+                int enter_count = 0;
+                TimePoint start_time = Clock::now();
+                TimePoint last_enter_time = start_time;
+
+                bool succes = false; // Variabilă pentru a verifica succesul trecerii
+
+                while (enter_count < enter_necessar) {
+                    if (_kbhit()) {
+                        char c = _getch();
+                        if (c == '\r') {
+                            TimePoint current_time = Clock::now();
+                            if (duration_cast<Seconds>(current_time - last_enter_time).count() > 3) {
+                                cout << "A trecut prea mult timp intre apasari! Pasarea a murit!" << endl;
+                                pasare1.scade_viata(100); // Scade viața păsării
+                                pierderi++; // Incrementăm contorul pierderilor
+                                break; // Ieșim din bucla
+                            }
+
+                            // Doar incrementăm dacă nu am atins numărul necesar de apăsări
+                            if (enter_count < enter_necessar) {
+                                enter_count++;
+                                last_enter_time = current_time;
+                                cout << "Enter apasat! (număr apasari: " << enter_count << ")" << endl;
+
+                                if (enter_count == enter_necessar) {
+                                    succes = true; // Trecerea a fost un succes
+                                    break; // Ieșim din bucla
+                                }
+                            } else {
+                                cout << "Ai apasat Enter de prea multe ori! Pasarea a murit!" << endl;
+                                pasare1.scade_viata(100);
+                                pierderi++;
+                                break;
+                            }
+                        } else if (c == 'p') {
+                            cout << "Jocul a fost pus pe pauza. Apasa 'p' pentru a continua..." << endl;
+                            asteapta_tasta_pentru_continuare(); // Așteaptă tasta 'p' pentru a continua
+                            start_time = Clock::now(); // Resetează timpul de început la continuare
+                            last_enter_time = start_time; // Resetează timpul ultimei apăsări
+                        }
+                    }
+
+                    // Verifică timpul de inactivitate
+                    TimePoint current_time = Clock::now();
+                    if (duration_cast<Seconds>(current_time - last_enter_time).count() >= 2) {
+                        enter_count--; // Scade un Enter
+                        last_enter_time = current_time; // Resetează timpul ultimei apăsări
+                        cout << "Au trecut 2 secunde! Numarul de apasari scade: " << enter_count << endl;
+
+                        // Verifică dacă enter_count a devenit negativ
+                        if (enter_count < 0) {
+                            cout << "Pasarea a murit din cauza lipsei de apasari!" << endl;
+                            pasare1.scade_viata(100);
+                            pierderi++;
+                            break; // Ieșim din bucla
+                        }
+                    }
+                }
+
+                if (!succes) {
+                    cout << "Nivelul a fost completat!" << endl;
+                    nivel_completat = true; // Setăm nivelul ca completat
+                }
+            }
+        }
+
+        cout << pasare1; // Afișează starea păsării
+    }
+
+    cout << "Game Over!" << endl;
 
     return 0;
 }

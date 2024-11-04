@@ -15,16 +15,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(cmake/Options.cmake)
 # Setează calea către SFML
 #set(SFML_DIR "C:/Users/Andreea/Desktop/Proiect POO/SFML-2.6.1/lib/cmake/SFML")
+set(SFML_DIR "C:/path/to/SFML/lib/cmake/SFML")
+set(CMAKE_PREFIX_PATH "C:/path/to/SFML")
 
 ###############################################################################
 # Caută pachetele SFML necesare
-#find_package(SFML 2.6 COMPONENTS graphics window system REQUIRED)
+#find_package(SFML 2.6.1 COMPONENTS graphics window system REQUIRED)
 
 # external dependencies with FetchContent
-# include(FetchContent)
+ include(FetchContent)
 #
-# set(FETCHCONTENT_QUIET OFF)
-# set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+ set(FETCHCONTENT_QUIET OFF)
+ set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 #
 # NOTE: Also update env vars used for caching in
 #         - .github/actions/configure-cmake/action.yml
@@ -50,9 +52,9 @@ include(cmake/Options.cmake)
 
 # NOTE: update executable name in .github/workflows/cmake.yml:25 when changing name here
 add_executable(${PROJECT_NAME}
-        Flappy1.cpp
         Flappy1.h
-        #generated/src/Helper.cpp
+        generated/src/Helper.cpp
+        Flappy1.cpp
 )
 
 include(cmake/CompilerFlags.cmake)
