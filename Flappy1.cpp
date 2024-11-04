@@ -74,6 +74,10 @@ public:
         nivel_curent++; // trece la nivelul următor
     }
 
+    void reset_nivel() {
+        nivel_curent = 1; // resetează nivelul la 1
+    }
+
     // Operator friend pentru a putea utiliza cout
     friend ostream& operator<<(ostream& os, const Meniu& m) {
         os << "Meniu [nivel curent: " << m.nivel_curent << "]";
@@ -90,7 +94,7 @@ void asteapta_tasta_pentru_continuare() {
                 break; // continuă jocul
             }
         }
-        this_thread::sleep_for(milliseconds(200)); // așteaptă puțin
+        this_thread::sleep_for(seconds(1)); // așteaptă 1 s
     }
 }
 
@@ -118,72 +122,58 @@ int main() {
     Meniu meniu; // Crearea meniului
     meniu.afiseaza_meniu(); // Afișează opțiunile de meniu
 
+    int nivel_curent = meniu.get_nivel();
     int pierderi = 0; // Contor pentru pierderi
 
-    while (pierderi < 2) { // Jucătorul poate pierde de maximum 2 ori
-        cout << "Nivelul " << meniu.get_nivel() << " incepe!" << endl;
-        asteapta_tasta_pentru_continuare(); // Așteaptă tasta 'p' pentru a începe
+    while (true) {
+        cout << "Nivelul " << nivel_curent << ": " << endl;
 
-        // Resetează viața păsării pentru fiecare încercare a nivelului
+        // Resetează viața pentru nivelul curent
         pasare1.reset();
-        int nr_tuburi = 2 + (meniu.get_nivel() / 2); // Numărul de tuburi per nivel
 
-        bool nivel_completat = false; // Variabilă pentru a verifica completarea nivelului
+        while (pasare1.este_in_viata()) {
+            // Simularea jocului
+            int nr_tuburi = 2 + (nivel_curent / 2); // Numărul de tuburi per nivel
+            for (int i = 0; i < nr_tuburi; ++i) {
+                int apasari_necesare = numar_apasari_necesare(nivel_curent, i);
+                cout << "Apasa Enter de " << apasari_necesare << " ori pentru a trece prin tubul " << i + 1 << "." << endl;
 
-        for (int i = 0; i < nr_tuburi; ++i) {
-            int enter_necessar = numar_apasari_necesare(meniu.get_nivel(), i);
-            cout << "Trecere prin tubul " << i + 1 << ". Apasa Enter de " << enter_necessar << " ori pentru a trece!" << endl;
+                int apasari_realizate = 0;
+                TimePoint last_enter_time = Clock::now();
+                TimePoint start_time = last_enter_time;
 
-            int enter_count = 0;
-            TimePoint start_time = Clock::now();
-            TimePoint last_enter_time = start_time;
-            bool pauza = false; // Variabilă pentru a verifica dacă jocul este pe pauză
-            bool succes = false; // Variabilă pentru a verifica succesul trecerii
+                while (apasari_realizate < apasari_necesare) {
+                    if (_kbhit()) {
+                        char c = _getch();
+                        if (c == '\r') { // Verificăm dacă s-a apăsat Enter
+                            TimePoint current_time = Clock::now();
+                            if (duration_cast<Seconds>(current_time - last_enter_time).count() >= 3) {
+                                cout << "A trecut prea mult timp intre apasari! Pasarea a murit!" << endl;
+                                pasare1.scade_viata(100); // Scade viața păsării
+                                pierderi++; // Incrementăm contorul pierderilor
+                                break; // Ieșim din bucla
+                            }
 
-            while (enter_count < enter_necessar && pasare1.este_in_viata()) {
-                if (_kbhit()) {
-                    char c = _getch();
-                    if (c == '\r') { // Verifică dacă a fost apăsat Enter
-                        TimePoint current_time = Clock::now();
-                        // Dacă au trecut 4 secunde de inactivitate, păsărea moare
-                        if (!pauza && duration_cast<Seconds>(current_time - last_enter_time).count() > 4) {
-                            cout << "A trecut prea mult timp intre apasari! Pasarea a murit!" << endl;
-                            pasare1.scade_viata(100); // Scade viața păsării
-                            pierderi++; // Incrementăm contorul pierderilor
-                            break; // Ieșim din bucla
-                        }
-
-                        // Incrementăm enter_count și resetăm timpul ultimei apăsări
-                        enter_count++;
-                        last_enter_time = current_time;
-                        cout << "Enter apasat! (număr apasari: " << enter_count << ")" << endl;
-
-                        // Verificăm dacă numărul de apăsări a atins limita necesară
-                        if (enter_count == enter_necessar) {
-                            succes = true; // Trecerea a fost un succes
-                            break; // Ieșim din bucla
-                        }
-                    } else if (c == 'p') { // Pauză
-                        pauza = !pauza; // Comutăm starea de pauză
-                        if (pauza) {
+                            apasari_realizate++;
+                            last_enter_time = current_time;
+                            cout << "Enter apasat! (număr apasari: " << apasari_realizate << ")" << endl;
+                        } else if (c == 'p') {
                             cout << "Jocul a fost pus pe pauza. Apasa 'p' pentru a continua..." << endl;
-                        } else {
-                            cout << "Jocul a fost reluat." << endl;
-                            last_enter_time = Clock::now(); // Resetează timpul ultimei apăsări la reluare
+                            asteapta_tasta_pentru_continuare(); // Așteaptă tasta 'p' pentru a continua
+                            start_time = Clock::now(); // Resetează timpul de început la continuare
+                            last_enter_time = start_time; // Resetează timpul ultimei apăsări
                         }
                     }
-                }
 
-                // Verifică timpul de inactivitate doar dacă jocul nu este pe pauză
-                if (!pauza) {
+                    // Verifică timpul de inactivitate
                     TimePoint current_time = Clock::now();
                     if (duration_cast<Seconds>(current_time - last_enter_time).count() >= 2) {
-                        enter_count--; // Scade un Enter
+                        apasari_realizate--; // Scade un Enter
                         last_enter_time = current_time; // Resetează timpul ultimei apăsări
-                        cout << "Au trecut 2 secunde! Numarul de apasari scade: " << enter_count << endl;
+                        cout << "Au trecut 2 secunde! Numarul de apasari scade: " << apasari_realizate << endl;
 
-                        // Verifică dacă enter_count a devenit negativ
-                        if (enter_count < 0) {
+                        // Verifică dacă apasari_realizate a devenit negativ
+                        if (apasari_realizate < 0) {
                             cout << "Pasarea a murit din cauza lipsei de apasari!" << endl;
                             pasare1.scade_viata(100);
                             pierderi++;
@@ -191,29 +181,36 @@ int main() {
                         }
                     }
                 }
+
+                if (!pasare1.este_in_viata()) {
+                    cout << "Ai pierdut acest nivel!" << endl;
+                    break; // Ieșim din bucla dacă pasărea a murit
+                }
             }
 
-            // Dacă pasărea a murit, ieșim din bucla de tuburi
-            if (!pasare1.este_in_viata()) {
-                cout << "Nivelul a fost pierdut!" << endl;
-                break; // Ieșim din bucla de tuburi
-            }
-
-            if (succes) {
-                cout << "Trecerea prin tubul " << i + 1 << " a fost un succes!" << endl;
+            if (pasare1.este_in_viata()) {
+                cout << "Nivel completat!" << endl;
+                meniu.next_level(); // trece la nivelul următor
+                nivel_curent = meniu.get_nivel();
             }
         }
 
-        // Verificăm pierderile și nivelul
-        if (pierderi < 2 && pasare1.este_in_viata()) {
-            cout << "Nivel completat!" << endl;
-            meniu.next_level(); // Trecem la nivelul următor
-        } else if (pierderi >= 2) {
-            cout << "Game Over!" << endl;
-        }
+        // Verifică dacă pasărea a murit
+        if (!pasare1.este_in_viata()) {
+            cout << "Nivel pierdut! Viata ramane 0." << endl;
+            pierderi++;
+            asteapta_tasta_pentru_continuare();
 
-        cout << pasare1; // Afișează starea păsării
-        asteapta_tasta_pentru_continuare(); // Așteaptă tasta 'p' pentru a continua
+            // Logica pentru reluarea nivelului
+            if (pierderi < 3) {
+                cout << "Se reia nivelul " << nivel_curent << endl;
+                // viața se resetează automat la reluarea nivelului
+            } else {
+                cout << "Ai pierdut de 3 ori. Se revine la nivelul 1." << endl;
+                meniu.reset_nivel(); // Resetează nivelul la 1
+                pierderi = 0; // Resetare contor pierderi
+            }
+        }
     }
 
     return 0;
