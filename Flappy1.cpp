@@ -190,7 +190,7 @@ int main() {
 
             if (pasare1.este_in_viata()) {
                 cout << "Nivel completat!" << endl;
-                meniu.next_level(); // trece la nivelul următor
+                meniu.next_level();// trece la nivelul următor
                 nivel_curent = meniu.get_nivel();
             }
         }
