@@ -29,7 +29,7 @@ public:
         viata = 100; // resetează viața păsării
     }
 
-    bool este_in_viata() const {
+    [[nodiscard]] bool este_in_viata() const {
         return viata > 0; // verifică dacă pasărea este în viață
     }
 
@@ -48,7 +48,7 @@ public:
         dauna = dauna_noua;
     }
 
-    void interactiune(Pasare &pasare, bool a_trecut) {
+    void interactiune(Pasare &pasare, bool a_trecut) const {
         if (!a_trecut) {
             pasare.scade_viata(dauna);
             cout << "Pasarea s-a lovit de un " << obstacol << ". Dauna: " << dauna << endl;
@@ -77,7 +77,7 @@ public:
         obstacol = Obstacol("Tub", 100); // la fel ca mai sus
     } // tubul da dauna de 100 deci moare:)
 
-    void interactiune(Pasare &pasare, bool a_trecut) {
+    void interactiune(Pasare &pasare, bool a_trecut) const {
         obstacol.interactiune(pasare, a_trecut); // impact pasare-tub
     }
 
@@ -114,7 +114,7 @@ public:
         }
     }
 
-    int get_nivel() const {
+    [[nodiscard]] int get_nivel() const {
         return nivel_curent; // returnează nivelul curent
     }
 
@@ -154,7 +154,7 @@ int numar_apasari_necesare(int nivel, int index_tub) {
     } else if (nivel == 3) {
         return 4; // necesare 4 apăsări pentru nivelul 3
     } else {
-        // Alternare pentru niveluri >= 4
+        //  niveluri >= 4
         if (index_tub % 4 == 0) {
             return 3; // tub de 3 apăsări
         } else if (index_tub % 4 == 1 || index_tub % 4 == 2) {
@@ -165,7 +165,7 @@ int numar_apasari_necesare(int nivel, int index_tub) {
     }
 }
 
-int main() {
+[[noreturn]] int main() {
     Pasare pasare1;
     Meniu meniu;
     meniu.afiseaza_meniu();
@@ -187,13 +187,14 @@ int main() {
                 cout << "Apasa Enter de " << apasari_necesare << " ori pentru a trece prin tubul " << i + 1 << "." << endl;
 
                 int apasari_realizate = 0;
-                TimePoint last_enter_time = Clock::now();
+                TimePoint last_enter_time = Clock::now(); // timpul curent stocat
                 TimePoint start_time = last_enter_time; // tine in evidenta apasarea tastei enter
 
                 while (apasari_realizate < apasari_necesare) {
-                    if (_kbhit()) {
-                        char c = _getch();
-                        if (c == '\r') { // Verificăm dacă s-a apăsat Enter
+                    if (_kbhit())//tasta apasata fara sa afecteze programul cand este executat
+                        {
+                        char c = _getch(); //citeste caracterul apasat, fara sa l afiseze, nu ca scanf de ex
+                        if (c == '\r') { // verificăm dacă s-a apăsat Enter
                             TimePoint current_time = Clock::now();
                             if (duration_cast<Seconds>(current_time - last_enter_time).count() >= 3) {
                                 cout << "A trecut prea mult timp intre apasari! Pasarea a murit!" << endl;
