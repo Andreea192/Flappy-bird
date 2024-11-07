@@ -183,7 +183,7 @@ int numar_apasari_necesare(int nivel, int index_tub) {
         while (pasare1.este_in_viata()) {
             int nr_tuburi = 2 + (nivel_curent / 2); // numar la intamplare de tuburi pt fiecare nivel-progresie
             for (int i = 0; i < nr_tuburi; ++i) {
-                int apasari_necesare = numar_apasari_necesare(nivel_curent, i);
+               int apasari_necesare = numar_apasari_necesare(nivel_curent, i);
                 cout << "Apasa Enter de " << apasari_necesare << " ori pentru a trece prin tubul " << i + 1 << "." << endl;
 
                 int apasari_realizate = 0;
