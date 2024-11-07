@@ -25,6 +25,7 @@ public:
         }
     }
 
+    
     void reset() {
         viata = 100; // resetează viața păsării
     }
